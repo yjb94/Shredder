@@ -1,33 +1,28 @@
 import {
   Canvas,
-  Circle,
   Group,
-  Image,
   ImageShader,
-  Rect,
   SkRect,
-  Vector,
   Vertices,
   rect,
-  useClock,
   useImage,
   vec,
 } from "@shopify/react-native-skia";
-import React, { useDebugValue, useEffect } from "react";
-import { Button, Dimensions, useWindowDimensions } from "react-native";
-import Animated, {
+import React, { useEffect, useRef, useState } from "react";
+import { Button, SafeAreaView, useWindowDimensions } from "react-native";
+import {
+  SharedValue,
   useDerivedValue,
   useSharedValue,
-  withRepeat,
   withTiming,
 } from "react-native-reanimated";
-import { Skeleton } from "./Skeleton";
 
+const NUMBER_OF_STRIPES = 20;
 export const Puzzle = () => {
-  const picture = useImage(require("./assets/art1.jpg"));
+  const picture = useImage(require("./assets/banksy.jpg"));
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const stripeInterval = useSharedValue(0);
-  const clock = useClock();
+  const [step, setStep] = useState(0);
 
   if (!picture) {
     return null;
@@ -42,19 +37,33 @@ export const Puzzle = () => {
     windowWidth / 2 / pictureRatio
   );
 
-  const numberOfStripes = 20;
-  const rects = Array.from({ length: numberOfStripes }, (_, i) => {
-    const stripeWidth = windowWidth / 2 / numberOfStripes;
-    const stripeHeight = windowWidth / 2 / pictureRatio;
-    return rect(i * stripeWidth, 0, stripeWidth, stripeHeight);
-  });
+  const rects: SkRect[][] = [];
+  for (let i = 0; i < NUMBER_OF_STRIPES; i++) {
+    const stripe: SkRect[] = [];
+    for (let j = 0; j < NUMBER_OF_STRIPES; j++) {
+      stripe.push(
+        rect(
+          (i * pictureRect.width) / NUMBER_OF_STRIPES,
+          (j * pictureRect.height) / NUMBER_OF_STRIPES,
+          pictureRect.width / NUMBER_OF_STRIPES,
+          pictureRect.height / NUMBER_OF_STRIPES
+        )
+      );
+    }
+    rects.push(stripe);
+  }
 
-  const shred = () => {
-    stripeInterval.value = withTiming(3, { duration: 1000 });
+  const addStep = () => {
+    setStep((prev) => prev + 1);
+  };
+  const minusStep = () => {
+    setStep((prev) => prev - 1);
   };
 
   return (
-    <>
+    <SafeAreaView style={{ flex: 1 }}>
+      <Button title="Next" onPress={addStep} />
+      <Button title="Prev" onPress={minusStep} />
       <Canvas
         style={{
           flex: 1,
@@ -65,150 +74,136 @@ export const Puzzle = () => {
           transform={[
             {
               translateX:
-                windowWidth / 4 - (stripeInterval.value * numberOfStripes) / 2,
+                windowWidth / 4 -
+                (stripeInterval.value * NUMBER_OF_STRIPES) / 2,
             },
             { translateY: windowHeight / 4 },
           ]}
         >
           <ImageShader image={picture} rect={pictureRect} fit="fill" />
-          {rects.map((rect, i) => {
-            return (
-              <Stripe
-                key={i}
-                index={i}
-                rect={rect}
-                numberOfStripes={numberOfStripes}
-              />
-            );
+          {rects.map((stripe, i) => {
+            return stripe.map((piece, j) => {
+              return (
+                <Piece key={i * 10 + j} piece={piece} i={i} j={j} step={step} />
+              );
+            });
           })}
         </Group>
       </Canvas>
-      <Button title="Next" onPress={shred} />
-    </>
+    </SafeAreaView>
   );
 };
 
-interface StripeProps {
-  rect: SkRect;
-  index: number;
-  numberOfStripes: number;
-}
+type PieceProps = {
+  piece: SkRect;
+  i: number;
+  j: number;
+  step: number;
+};
 
-const ANIMATION_DURATION = 1500;
-const ANIMATION_DELAY = 1000;
+const ANIMATION_DURATION = 600;
+const ANIMATION_DELAY = 100;
 
-export const Stripe = ({ index, rect, numberOfStripes }: StripeProps) => {
-  const { vertices, indices, textures } = generateTrianglePointsAndIndices(
-    rect,
-    20
-  );
+const Piece: React.FC<PieceProps> = ({
+  piece,
+  i,
+  j,
+  step,
+  // , dx, dy
+}) => {
+  const toDx = useRef(0);
+  const toDy = useRef(0);
 
-  const dy = useSharedValue(0);
-  const dx = useSharedValue(0);
+  let dx = useSharedValue(0);
+  let dy = useSharedValue(0);
+
+  const WINDOW_HEIGHT = useWindowDimensions().height;
+  const WINDOW_WIDTH = useWindowDimensions().width;
 
   useEffect(() => {
-    if (index % 2 === 1) {
-      pullDown();
-      setTimeout(() => {
-        pullUp();
-        pullRight();
-      }, ANIMATION_DURATION + ANIMATION_DELAY);
-    } else {
-      setTimeout(() => {
-        pullLeft();
-      }, ANIMATION_DURATION + ANIMATION_DELAY);
-    }
-  }, []);
+    if (step === 0) {
+      toDx.current = 0;
+      toDy.current = 0;
+      animate();
+    } else if (step === 1) {
+      if (i % 2 === 0) {
+        setTimeout(() => {
+          toDx.current = Math.floor(i / 2) * -piece.width;
+          toDy.current = 0;
+          animate();
+        }, ANIMATION_DURATION + ANIMATION_DELAY);
+      } else {
+        toDy.current = WINDOW_HEIGHT / 4;
+        animate();
 
-  const pullDown = () => {
-    dy.value = withTiming(rect.height / 2, { duration: ANIMATION_DURATION });
-  };
-  const pullUp = () => {
-    dy.value = withTiming(0, { duration: ANIMATION_DURATION });
-  };
-  const pullLeft = () => {
-    dx.value = withTiming(Math.floor(index / 2) * -rect.width, {
-      duration: ANIMATION_DURATION,
-    });
-  };
-  const pullRight = () => {
-    dx.value = withTiming(
-      rect.width * (Math.floor(numberOfStripes / 2) - 1) +
-        Math.floor(index / 2) * -rect.width,
-      {
-        duration: ANIMATION_DURATION,
+        setTimeout(() => {
+          toDx.current =
+            piece.width * (Math.floor(NUMBER_OF_STRIPES / 2) - 1) +
+            Math.floor(i / 2) * -piece.width;
+          if (i === 1 && j === 0) {
+            console.log(toDx.current);
+          }
+          toDy.current = 0;
+          animate();
+        }, ANIMATION_DURATION + ANIMATION_DELAY);
       }
-    );
+    } else if (step === 2) {
+      if (j % 2 === 0) {
+        toDx.current += -WINDOW_WIDTH / 8;
+        animate();
+        setTimeout(() => {
+          toDy.current += Math.floor(j / 2) * -piece.height;
+          toDx.current += WINDOW_WIDTH / 8;
+          animate();
+        }, ANIMATION_DURATION + ANIMATION_DELAY);
+      } else {
+        toDx.current += WINDOW_WIDTH / 8;
+        animate();
+        setTimeout(() => {
+          toDy.current +=
+            piece.height * (Math.floor(NUMBER_OF_STRIPES / 2) - 1) +
+            Math.floor(j / 2) * -piece.height;
+          toDx.current += -WINDOW_WIDTH / 8;
+          animate();
+        }, ANIMATION_DURATION + ANIMATION_DELAY);
+      }
+    }
+  }, [step, toDx.current, toDy.current]);
+
+  const animate = () => {
+    dx.value = withTiming(toDx.current, { duration: ANIMATION_DURATION });
+    dy.value = withTiming(toDy.current, { duration: ANIMATION_DURATION });
   };
 
-  const animatedVertices = useDerivedValue(() => {
-    return vertices.map((vertex, index) => {
-      // let dx = 0;
-      // if (index % 2 === 0) {
-      //   dx = Math.floor(index / 2) * -rect.width;
-      // } else {
-      //   dx =
-      //     rect.width * (Math.floor(numberOfStripes / 2) - 1) +
-      //     Math.floor(index / 2) * -rect.width;
-      // }
+  const textures = [
+    vec(piece.x, piece.y), // top-left
+    vec(piece.x + piece.width, piece.y), // top-right
+    vec(piece.x + piece.width, piece.y + piece.height), // bottom-right
+    vec(piece.x, piece.y + piece.height), // bottom-left
+  ];
 
-      return vec(
-        vertex.x +
-          //  dx,
-          dx.value,
-        vertex.y + dy.value
-      );
-    });
+  const vertices = useDerivedValue(() => {
+    const newRect = rect(
+      piece.x + dx.value,
+      piece.y + dy.value,
+      piece.width,
+      piece.height
+    );
+
+    return [
+      vec(newRect.x, newRect.y), // top-left
+      vec(newRect.x + newRect.width, newRect.y), // top-right
+      vec(newRect.x + newRect.width, newRect.y + newRect.height), // bottom-right
+      vec(newRect.x, newRect.y + newRect.height), // bottom-left
+    ];
   }, [dx, dy]);
-  console.log(vertices.length);
+
+  const indices = [0, 1, 2, 0, 2, 3];
 
   return (
     <>
-      <Vertices
-        vertices={animatedVertices}
-        textures={textures}
-        indices={indices}
-      />
+      <Vertices vertices={vertices} textures={textures} indices={indices} />
       {/* <Skeleton vertices={vertices} indices={indices} /> */}
     </>
   );
-};
-
-const generateTrianglePointsAndIndices = (
-  rct: SkRect,
-  triangleNumberHeight: number
-) => {
-  const vertices: Vector[] = [];
-  const textures: Vector[] = [];
-  const indices: number[] = [];
-
-  // Calculate the size of the triangles based on the given number
-  const triangleWidth = rct.width;
-  const triangleHeight = rct.height / triangleNumberHeight;
-
-  // Generate the list of points
-  for (let i = 0; i <= triangleNumberHeight; i++) {
-    for (let j = 0; j <= 1; j++) {
-      const point: Vector = vec(
-        rct.x + j * triangleWidth,
-        rct.y + i * triangleHeight
-      );
-      textures.push(point);
-      vertices.push(point);
-    }
-  }
-
-  // Generate the list of triangle indices
-  for (let i = 0; i < triangleNumberHeight; i++) {
-    const topLeftIndex = i * 2;
-    const topRightIndex = topLeftIndex + 1;
-    const bottomLeftIndex = topLeftIndex + 2;
-    const bottomRightIndex = bottomLeftIndex + 1;
-
-    // Create two triangles for each square and add their indices to the list
-    indices.push(topLeftIndex, topRightIndex, bottomLeftIndex);
-    indices.push(bottomLeftIndex, topRightIndex, bottomRightIndex);
-  }
-
-  return { vertices, indices, textures };
 };
