@@ -17,9 +17,9 @@ import {
   withTiming,
 } from "react-native-reanimated";
 
-const NUMBER_OF_STRIPES = 20;
+const NUMBER_OF_STRIPES = 16;
 export const Puzzle = () => {
-  const picture = useImage(require("./assets/banksy.jpg"));
+  const picture = useImage(require("./assets/art2.jpg"));
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const stripeInterval = useSharedValue(0);
   const [step, setStep] = useState(0);
@@ -62,8 +62,6 @@ export const Puzzle = () => {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <Button title="Next" onPress={addStep} />
-      <Button title="Prev" onPress={minusStep} />
       <Canvas
         style={{
           flex: 1,
@@ -90,6 +88,8 @@ export const Puzzle = () => {
           })}
         </Group>
       </Canvas>
+      <Button title="Next" onPress={addStep} />
+      <Button title="Prev" onPress={minusStep} />
     </SafeAreaView>
   );
 };
@@ -104,13 +104,7 @@ type PieceProps = {
 const ANIMATION_DURATION = 600;
 const ANIMATION_DELAY = 100;
 
-const Piece: React.FC<PieceProps> = ({
-  piece,
-  i,
-  j,
-  step,
-  // , dx, dy
-}) => {
+const Piece: React.FC<PieceProps> = ({ piece, i, j, step }) => {
   const toDx = useRef(0);
   const toDy = useRef(0);
 
@@ -140,30 +134,32 @@ const Piece: React.FC<PieceProps> = ({
           toDx.current =
             piece.width * (Math.floor(NUMBER_OF_STRIPES / 2) - 1) +
             Math.floor(i / 2) * -piece.width;
-          if (i === 1 && j === 0) {
-            console.log(toDx.current);
-          }
           toDy.current = 0;
           animate();
         }, ANIMATION_DURATION + ANIMATION_DELAY);
       }
     } else if (step === 2) {
+      const pictureWidth = piece.width * Math.floor(NUMBER_OF_STRIPES / 2);
       if (j % 2 === 0) {
-        toDx.current += -WINDOW_WIDTH / 8;
+        toDx.current += -pictureWidth;
         animate();
         setTimeout(() => {
           toDy.current += Math.floor(j / 2) * -piece.height;
-          toDx.current += WINDOW_WIDTH / 8;
+          toDy.current +=
+            (piece.height * Math.floor(NUMBER_OF_STRIPES / 2)) / 2;
           animate();
         }, ANIMATION_DURATION + ANIMATION_DELAY);
       } else {
-        toDx.current += WINDOW_WIDTH / 8;
+        toDx.current += pictureWidth;
         animate();
         setTimeout(() => {
           toDy.current +=
             piece.height * (Math.floor(NUMBER_OF_STRIPES / 2) - 1) +
             Math.floor(j / 2) * -piece.height;
-          toDx.current += -WINDOW_WIDTH / 8;
+          toDy.current += -(
+            (piece.height * Math.floor(NUMBER_OF_STRIPES / 2)) /
+            2
+          );
           animate();
         }, ANIMATION_DURATION + ANIMATION_DELAY);
       }
@@ -174,6 +170,35 @@ const Piece: React.FC<PieceProps> = ({
     dx.value = withTiming(toDx.current, { duration: ANIMATION_DURATION });
     dy.value = withTiming(toDy.current, { duration: ANIMATION_DURATION });
   };
+
+  // if (step === 0) {
+  //   toDx.current = 0;
+  //   toDy.current = 0;
+  // } else if (step === 1) {
+  //   if (i % 2 === 0) {
+  //     toDx.current = Math.floor(i / 2) * -piece.width;
+  //     toDy.current = 0;
+  //   } else {
+  //     toDx.current =
+  //       piece.width * (Math.floor(NUMBER_OF_STRIPES / 2) - 1) +
+  //       Math.floor(i / 2) * -piece.width;
+  //     toDy.current = 0;
+  //   }
+  // } else if (step === 2) {
+  //   if (j % 2 === 0) {
+  //     toDy.current = Math.floor(j / 2) * -piece.height;
+  //     toDy.current += (piece.height * Math.floor(NUMBER_OF_STRIPES / 2)) / 2;
+
+  //     toDx.current += piece.width * Math.floor(NUMBER_OF_STRIPES / 2);
+  //   } else {
+  //     toDy.current +=
+  //       piece.height * (Math.floor(NUMBER_OF_STRIPES / 2) - 1) +
+  //       Math.floor(j / 2) * -piece.height;
+  //     toDy.current += -((piece.height * Math.floor(NUMBER_OF_STRIPES / 2)) / 2);
+
+  //     toDx.current += -(piece.width * Math.floor(NUMBER_OF_STRIPES / 2));
+  //   }
+  // }
 
   const textures = [
     vec(piece.x, piece.y), // top-left
@@ -197,6 +222,22 @@ const Piece: React.FC<PieceProps> = ({
       vec(newRect.x, newRect.y + newRect.height), // bottom-left
     ];
   }, [dx, dy]);
+
+  // const vertices = (() => {
+  //   const newRect = rect(
+  //     piece.x + toDx.current,
+  //     piece.y + toDy.current,
+  //     piece.width,
+  //     piece.height
+  //   );
+
+  //   return [
+  //     vec(newRect.x, newRect.y), // top-left
+  //     vec(newRect.x + newRect.width, newRect.y), // top-right
+  //     vec(newRect.x + newRect.width, newRect.y + newRect.height), // bottom-right
+  //     vec(newRect.x, newRect.y + newRect.height), // bottom-left
+  //   ];
+  // })();
 
   const indices = [0, 1, 2, 0, 2, 3];
 
