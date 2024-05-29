@@ -6,6 +6,7 @@ import {
   Vertices,
   rect,
   useImage,
+  useTouchHandler,
   vec,
 } from "@shopify/react-native-skia";
 import React, { useEffect, useRef, useState } from "react";
@@ -18,11 +19,43 @@ import {
 } from "react-native-reanimated";
 
 const NUMBER_OF_STRIPES = 16;
+
+const ANIMATION_DURATION = 1500;
+const ANIMATION_DELAY = 500;
+
 export const Puzzle = () => {
   const picture = useImage(require("./assets/art2.jpg"));
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const stripeInterval = useSharedValue(0);
   const [step, setStep] = useState(0);
+
+  const y = useSharedValue(0);
+  const offset = useSharedValue(0);
+
+  const addStep = () => {
+    setStep((prev) => prev + 1);
+  };
+  const minusStep = () => {
+    setStep((prev) => prev - 1);
+  };
+  const resetStep = () => {
+    setStep(0);
+  };
+
+  const onTouch = useTouchHandler({
+    onStart: (event) => {
+      offset.value = y.value - event.y;
+    },
+    onActive: (event) => {
+      const newY = offset.value + event.y;
+      if (newY > y.value) {
+        y.value = newY;
+      }
+    },
+  });
+
+  const transform = useDerivedValue(() => {
+    return [{ translateY: y.value }];
+  }, [y]);
 
   if (!picture) {
     return null;
@@ -37,61 +70,84 @@ export const Puzzle = () => {
     windowWidth / 2 / pictureRatio
   );
 
-  const rects: SkRect[][] = [];
+  // const rects: SkRect[][] = [];
+  // for (let i = 0; i < NUMBER_OF_STRIPES; i++) {
+  //   const stripe: SkRect[] = [];
+  //   for (let j = 0; j < NUMBER_OF_STRIPES; j++) {
+  //     stripe.push(
+  //       rect(
+  //         (i * pictureRect.width) / NUMBER_OF_STRIPES,
+  //         (j * pictureRect.height) / NUMBER_OF_STRIPES,
+  //         pictureRect.width / NUMBER_OF_STRIPES,
+  //         pictureRect.height / NUMBER_OF_STRIPES
+  //       )
+  //     );
+  //   }
+  //   rects.push(stripe);
+  // }
+  const stripes: SkRect[] = [];
   for (let i = 0; i < NUMBER_OF_STRIPES; i++) {
-    const stripe: SkRect[] = [];
-    for (let j = 0; j < NUMBER_OF_STRIPES; j++) {
-      stripe.push(
-        rect(
-          (i * pictureRect.width) / NUMBER_OF_STRIPES,
-          (j * pictureRect.height) / NUMBER_OF_STRIPES,
-          pictureRect.width / NUMBER_OF_STRIPES,
-          pictureRect.height / NUMBER_OF_STRIPES
-        )
-      );
-    }
-    rects.push(stripe);
+    stripes.push(
+      rect(
+        i * (pictureRect.width / NUMBER_OF_STRIPES),
+        0,
+        pictureRect.width / NUMBER_OF_STRIPES,
+        pictureRect.height
+      )
+    );
   }
 
-  const addStep = () => {
-    setStep((prev) => prev + 1);
-  };
-  const minusStep = () => {
-    setStep((prev) => prev - 1);
-  };
-
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <>
       <Canvas
         style={{
           flex: 1,
-          backgroundColor: "grey",
+          // backgroundColor: "grey",
         }}
+        onTouch={onTouch}
       >
-        <Group
-          transform={[
-            {
-              translateX:
-                windowWidth / 4 -
-                (stripeInterval.value * NUMBER_OF_STRIPES) / 2,
-            },
-            { translateY: windowHeight / 4 },
-          ]}
-        >
-          <ImageShader image={picture} rect={pictureRect} fit="fill" />
-          {rects.map((stripe, i) => {
-            return stripe.map((piece, j) => {
-              return (
-                <Piece key={i * 10 + j} piece={piece} i={i} j={j} step={step} />
-              );
-            });
-          })}
+        <Group transform={transform}>
+          <Group
+            transform={[
+              {
+                translateX: windowWidth / 4,
+              },
+            ]}
+          >
+            <ImageShader image={picture} rect={pictureRect} fit="fill" />
+            {stripes.map((stripe, i) => {
+              return <Stripe key={i} stripe={stripe} i={i} step={step} />;
+            })}
+          </Group>
         </Group>
       </Canvas>
-      <Button title="Next" onPress={addStep} />
-      <Button title="Prev" onPress={minusStep} />
-    </SafeAreaView>
+      <Button title="Add Step" onPress={addStep} />
+    </>
   );
+};
+
+type StripeProps = {
+  stripe: SkRect;
+  i: number;
+  step: number;
+};
+
+const Stripe: React.FC<StripeProps> = ({ stripe, i, step }) => {
+  const pieces = useDerivedValue(() => {
+    const pieceWidth = stripe.width;
+    const pieceHeight = stripe.height / NUMBER_OF_STRIPES;
+    const pieces: SkRect[] = [];
+    for (let j = 0; j < NUMBER_OF_STRIPES; j++) {
+      pieces.push(
+        rect(stripe.x, stripe.y + j * pieceHeight, pieceWidth, pieceHeight)
+      );
+    }
+    return pieces;
+  }, [stripe]);
+
+  return pieces.value.map((piece, j) => {
+    return <Piece key={j} piece={piece} i={i} j={j} step={step} />;
+  });
 };
 
 type PieceProps = {
@@ -101,9 +157,6 @@ type PieceProps = {
   step: number;
 };
 
-const ANIMATION_DURATION = 600;
-const ANIMATION_DELAY = 100;
-
 const Piece: React.FC<PieceProps> = ({ piece, i, j, step }) => {
   const toDx = useRef(0);
   const toDy = useRef(0);
@@ -112,7 +165,6 @@ const Piece: React.FC<PieceProps> = ({ piece, i, j, step }) => {
   let dy = useSharedValue(0);
 
   const WINDOW_HEIGHT = useWindowDimensions().height;
-  const WINDOW_WIDTH = useWindowDimensions().width;
 
   useEffect(() => {
     if (step === 0) {
