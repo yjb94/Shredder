@@ -1,22 +1,26 @@
 import {
   Canvas,
   Group,
+  Image,
   ImageShader,
   SkRect,
   Vertices,
+  interpolate,
   rect,
   useImage,
   useTouchHandler,
   vec,
 } from "@shopify/react-native-skia";
 import React, { useEffect, useRef, useState } from "react";
-import { Button, SafeAreaView, useWindowDimensions } from "react-native";
+import { Button, useWindowDimensions } from "react-native";
 import {
   SharedValue,
   useDerivedValue,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+import { Skeleton } from "./Skeleton";
+import { generateTrianglePointsAndIndices } from "./utils";
 
 const NUMBER_OF_STRIPES = 16;
 
@@ -24,9 +28,12 @@ const ANIMATION_DURATION = 1500;
 const ANIMATION_DELAY = 500;
 
 export const Puzzle = () => {
+  const pastaMachine1 = useImage(require("./assets/pm1.png"));
+  const pastaMachine2 = useImage(require("./assets/pm2.png"));
   const picture = useImage(require("./assets/art2.jpg"));
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const [step, setStep] = useState(0);
+  const [isStripeCropped, setIsStripeCropped] = useState(false);
 
   const y = useSharedValue(0);
   const offset = useSharedValue(0);
@@ -51,17 +58,32 @@ export const Puzzle = () => {
         y.value = newY;
       }
     },
+    onEnd: () => {
+      setIsStripeCropped(true);
+      y.value = withTiming(windowHeight, {
+        duration: 1500,
+      });
+    },
   });
 
   const transform = useDerivedValue(() => {
-    return [{ translateY: y.value }];
+    return [
+      {
+        translateX: windowWidth / 4,
+      },
+      {
+        translateY: 0,
+      },
+      { translateY: y.value },
+    ];
   }, [y]);
 
-  if (!picture) {
+  if (!picture || !pastaMachine1 || !pastaMachine2) {
     return null;
   }
 
   const pictureRatio = picture.width() / picture.height();
+  const pastaMachineRatio = pastaMachine1.width() / pastaMachine1.height();
 
   const pictureRect = rect(
     0,
@@ -70,21 +92,16 @@ export const Puzzle = () => {
     windowWidth / 2 / pictureRatio
   );
 
-  // const rects: SkRect[][] = [];
-  // for (let i = 0; i < NUMBER_OF_STRIPES; i++) {
-  //   const stripe: SkRect[] = [];
-  //   for (let j = 0; j < NUMBER_OF_STRIPES; j++) {
-  //     stripe.push(
-  //       rect(
-  //         (i * pictureRect.width) / NUMBER_OF_STRIPES,
-  //         (j * pictureRect.height) / NUMBER_OF_STRIPES,
-  //         pictureRect.width / NUMBER_OF_STRIPES,
-  //         pictureRect.height / NUMBER_OF_STRIPES
-  //       )
-  //     );
-  //   }
-  //   rects.push(stripe);
-  // }
+  const pastaMachineRect = rect(
+    0,
+    0,
+    windowWidth,
+    windowWidth / pastaMachineRatio
+  );
+
+  const pastaMachineY = pictureRect.height - 100;
+  const pastaMachineTransform = [{ translateY: pastaMachineY }];
+
   const stripes: SkRect[] = [];
   for (let i = 0; i < NUMBER_OF_STRIPES; i++) {
     stripes.push(
@@ -97,57 +114,137 @@ export const Puzzle = () => {
     );
   }
 
+  const steps = () => {
+    // shred the picture
+    // move the stripes(one by one)
+    // bond the stripes
+    // rotate the bonded stripes
+    // shred the bonded stripes
+    // move the pieces
+    // bond the pieces
+  };
+
+  const animteToShreddedStripes = () => {};
+
+  console.log(
+    `JB ~ Puzzle ~ rect(0, 0, pictureRect.width, pastaMachineRect.y):`,
+    rect(0, 0, pictureRect.width, pastaMachineRect.y)
+  );
   return (
     <>
       <Canvas
         style={{
           flex: 1,
-          // backgroundColor: "grey",
         }}
         onTouch={onTouch}
       >
+        <Image
+          transform={pastaMachineTransform}
+          image={pastaMachine2}
+          rect={pastaMachineRect}
+        />
         <Group transform={transform}>
-          <Group
-            transform={[
-              {
-                translateX: windowWidth / 4,
-              },
-            ]}
-          >
-            <ImageShader image={picture} rect={pictureRect} fit="fill" />
-            {stripes.map((stripe, i) => {
-              return <Stripe key={i} stripe={stripe} i={i} step={step} />;
-            })}
+          <ImageShader image={picture} rect={pictureRect} fit="fill" />
+          {stripes.map((stripe, i) => {
+            return (
+              <Stripe
+                key={i}
+                stripe={stripe}
+                i={i}
+                y={y}
+                isCroped={isStripeCropped}
+              />
+            );
+          })}
+        </Group>
+        <Group
+          clip={rect(windowWidth / 4, 0, pictureRect.width, pastaMachineY + 50)}
+        >
+          <Group transform={transform}>
+            <Image image={picture} rect={pictureRect} />
           </Group>
         </Group>
+        <Image
+          image={pastaMachine1}
+          rect={pastaMachineRect}
+          transform={pastaMachineTransform}
+        />
       </Canvas>
-      <Button title="Add Step" onPress={addStep} />
+      {/* <Button title="Add Step" onPress={addStep} /> */}
     </>
   );
 };
 
 type StripeProps = {
   stripe: SkRect;
+  y: SharedValue<number>;
   i: number;
-  step: number;
+  isCroped: boolean;
 };
 
-const Stripe: React.FC<StripeProps> = ({ stripe, i, step }) => {
-  const pieces = useDerivedValue(() => {
-    const pieceWidth = stripe.width;
-    const pieceHeight = stripe.height / NUMBER_OF_STRIPES;
-    const pieces: SkRect[] = [];
-    for (let j = 0; j < NUMBER_OF_STRIPES; j++) {
-      pieces.push(
-        rect(stripe.x, stripe.y + j * pieceHeight, pieceWidth, pieceHeight)
-      );
-    }
-    return pieces;
-  }, [stripe]);
+const Stripe: React.FC<StripeProps> = ({
+  stripe,
+  y,
+  i: stripeIndex,
+  isCroped,
+}) => {
+  const { height: windowHeight } = useWindowDimensions();
 
-  return pieces.value.map((piece, j) => {
-    return <Piece key={j} piece={piece} i={i} j={j} step={step} />;
-  });
+  const { vertices, textures, indices } = generateTrianglePointsAndIndices(
+    stripe,
+    20
+  );
+
+  const animatedVertices = useDerivedValue(() => {
+    return vertices.map((vertex, vertexIndex) => {
+      // if (!isCroped) {
+      const dx = interpolate(
+        y.value,
+        [0, windowHeight / 2],
+        [0, (stripeIndex % 2 === 0 ? -1 : 1) * vertexIndex * vertexIndex * 0.03]
+      );
+      return vec(vertex.x + dx, vertex.y);
+      // } else {
+      //   let dx = 0;
+      //   const shrinkY = 1;
+
+      //   if (stripeIndex % 2 === 1) {
+      //     dx = -1 * (stripeIndex - 10) + vertexIndex * vertexIndex * 0.02;
+      //     //  -stripe.width * 0.5;
+      //   } else {
+      //     dx = -vertexIndex * vertexIndex * 0.02;
+      //   }
+
+      //   return vec(vertex.x + dx, vertex.y * shrinkY);
+      // }
+    });
+  }, [y, stripeIndex, isCroped]);
+
+  return (
+    <>
+      <Vertices
+        vertices={animatedVertices}
+        textures={textures}
+        indices={indices}
+      />
+      {/* <Skeleton vertices={animatedVertices} indices={indices} /> */}
+    </>
+  );
+  // const pieces = useDerivedValue(() => {
+  //   const pieceWidth = stripe.width;
+  //   const pieceHeight = stripe.height / NUMBER_OF_STRIPES;
+  //   const pieces: SkRect[] = [];
+  //   for (let j = 0; j < NUMBER_OF_STRIPES; j++) {
+  //     pieces.push(
+  //       rect(stripe.x, stripe.y + j * pieceHeight, pieceWidth, pieceHeight)
+  //     );
+  //   }
+  //   return pieces;
+  // }, [stripe]);
+
+  // return pieces.value.map((piece, j) => {
+  //   return <Piece key={j} piece={piece} i={i} j={j} step={step} />;
+  // });
 };
 
 type PieceProps = {
@@ -296,7 +393,7 @@ const Piece: React.FC<PieceProps> = ({ piece, i, j, step }) => {
   return (
     <>
       <Vertices vertices={vertices} textures={textures} indices={indices} />
-      {/* <Skeleton vertices={vertices} indices={indices} /> */}
+      <Skeleton vertices={vertices} indices={indices} />
     </>
   );
 };
