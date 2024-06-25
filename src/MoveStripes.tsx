@@ -22,7 +22,14 @@ import {
 } from "react-native-reanimated";
 import { generateTrianglePointsAndIndices } from "./utils";
 import { Skeleton } from "./Skeleton";
-import { NUMBER_OF_STRIPES } from "./const";
+import {
+  NUMBER_OF_STRIPES,
+  photo,
+  pictureRect,
+  stripes,
+  windowHeight,
+  windowWidth,
+} from "./const";
 
 const ANIMATION_DURATION = 1500;
 const ANIMATION_DELAY = 500;
@@ -31,25 +38,8 @@ const ANIMATION_DELAY = 500;
 
 const STRIPE_Y_INTERVAL = 5;
 
-const pictureRatio = 564 / 1030;
-const { width: windowWidth, height: windowHeight } = Dimensions.get("window");
-
-const pictureRect = rect(0, 0, windowWidth / 2, windowWidth / 2 / pictureRatio);
-
-const stripes: SkRect[] = [];
-for (let i = 0; i < NUMBER_OF_STRIPES; i++) {
-  stripes.push(
-    rect(
-      i * (pictureRect.width / NUMBER_OF_STRIPES),
-      0,
-      pictureRect.width / NUMBER_OF_STRIPES,
-      pictureRect.height
-    )
-  );
-}
-
 export const MoveStripes = () => {
-  const picture = useImage(require("./assets/art2.jpg"));
+  const picture = useImage(photo);
 
   const stripesRef = useRef(stripes.map(() => createRef<Stripe>()));
   var animationIndex = 0;

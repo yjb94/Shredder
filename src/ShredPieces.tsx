@@ -34,7 +34,7 @@ import {
   generateTrianglePointsAndIndicesVertical,
 } from "./utils";
 import { Skeleton } from "./Skeleton";
-import { NUMBER_OF_STRIPES } from "./const";
+import { NUMBER_OF_STRIPES, photo } from "./const";
 
 // const ANIMATION_DURATION = 1500;
 // const ANIMATION_DELAY = 500;
@@ -114,9 +114,9 @@ shuffle1();
 
 export const ShredPieces = () => {
   // const picture = useImage(require("./assets/grid.png"));
-  const picture = useImage(require("./assets/art2.jpg"));
-  const pastaMachine1 = useImage(require("./assets/pm1.png"));
-  const pastaMachine2 = useImage(require("./assets/pm2.png"));
+  const picture = useImage(photo);
+  // const pastaMachine1 = useImage(require("./assets/pm1.png"));
+  // const pastaMachine2 = useImage(require("./assets/pm2.png"));
 
   const y = useSharedValue(0);
   const offset = useSharedValue(0);
@@ -168,11 +168,6 @@ export const ShredPieces = () => {
         }}
         onTouch={onTouch}
       >
-        <Image
-          transform={pastaMachineTransform}
-          image={pastaMachine2}
-          rect={pastaMachineRect}
-        />
         <Group
           transform={transform}
           origin={vec(pictureRect.width / 2, pictureRect.height / 2)}
@@ -192,11 +187,6 @@ export const ShredPieces = () => {
             <Image image={picture} rect={pictureRect} />
           </Group>
         </Group>
-        <Image
-          image={pastaMachine1}
-          rect={pastaMachineRect}
-          transform={pastaMachineTransform}
-        />
       </Canvas>
       {/* <Button title="Add Step" onPress={addStep} /> */}
     </>

@@ -34,7 +34,7 @@ import {
   generateTrianglePointsAndIndicesVertical,
 } from "./utils";
 import { Skeleton } from "./Skeleton";
-import { NUMBER_OF_STRIPES } from "./const";
+import { NUMBER_OF_STRIPES, photo } from "./const";
 
 const ANIMATION_DURATION = 1500;
 const ANIMATION_DELAY = 500;
@@ -86,7 +86,7 @@ function shuffle1() {
 shuffle1();
 
 export const MovePieces = () => {
-  const picture = useImage(require("./assets/art2.jpg"));
+  const picture = useImage(photo);
 
   const y = useSharedValue(0);
 
