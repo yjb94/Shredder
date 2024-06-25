@@ -11,7 +11,7 @@ interface SkeletonProps {
 export const Skeleton = ({ vertices, indices }: SkeletonProps) => {
   const path = useDerivedValue(() => {
     return indices.reduce((p, i, j) => {
-      const vertex = vertices.value[i];
+      const vertex = vertices.value ? vertices.value[i] : vertices[i];
       if (j % 3 === 0) {
         if (j > 0) {
           p.close();
