@@ -17,6 +17,7 @@ import {
 import React, { useState } from "react";
 import {
   SharedValue,
+  runOnJS,
   useDerivedValue,
   useSharedValue,
   withTiming,
@@ -38,7 +39,11 @@ import ShredderHead from "./ShredderHead";
 
 const START_Y = 30 as const;
 
-export const ShredStripes = () => {
+export type ShredStripesProps = {
+  onEnd?: () => void;
+};
+
+export const ShredStripes: React.FC<ShredStripesProps> = ({ onEnd }) => {
   const picture = useImage(photo);
 
   const y = useSharedValue<number>(START_Y);
@@ -58,9 +63,15 @@ export const ShredStripes = () => {
     },
     onEnd: () => {
       setIsStripeCropped(true);
-      y.value = withTiming(windowHeight + 200, {
-        duration: 2000,
-      });
+      y.value = withTiming(
+        windowHeight + 200,
+        {
+          duration: 2000,
+        },
+        () => {
+          runOnJS(onEnd)();
+        }
+      );
     },
   });
 

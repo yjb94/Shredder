@@ -13,6 +13,7 @@ import {
 import React from "react";
 import {
   SharedValue,
+  runOnJS,
   useDerivedValue,
   useSharedValue,
   withTiming,
@@ -72,7 +73,11 @@ function shuffle1() {
 }
 shuffle1();
 
-export const ShredPieces = () => {
+export type ShredPiecesProps = {
+  onEnd?: () => void;
+};
+
+export const ShredPieces: React.FC<ShredPiecesProps> = ({ onEnd }) => {
   const picture = useImage(photo);
 
   const y = useSharedValue(0);
@@ -89,9 +94,15 @@ export const ShredPieces = () => {
       }
     },
     onEnd: () => {
-      y.value = withTiming(windowHeight + 200, {
-        duration: 2000,
-      });
+      y.value = withTiming(
+        windowHeight + 200,
+        {
+          duration: 2000,
+        },
+        () => {
+          runOnJS(onEnd)();
+        }
+      );
     },
   });
 

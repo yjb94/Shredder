@@ -74,14 +74,18 @@ function shuffle1() {
 }
 shuffle1();
 
-export const MovePieces = () => {
+export type MovePiecesProps = {
+  onEnd?: () => void;
+};
+export const MovePieces: React.FC<MovePiecesProps> = ({ onEnd }) => {
   const picture = useImage(photo);
 
   const y = useSharedValue(0);
 
   const stripesRef = useRef(verticalStripes.map(() => createRef<Stripe>()));
-  var animationIndex = 0;
   const interval = useRef<NodeJS.Timeout>(null);
+  const lastAnimationTimeout = useRef<NodeJS.Timeout>(null);
+  var animationIndexRef = useRef(0);
 
   useEffect(() => {
     setTimeout(() => {
@@ -97,16 +101,26 @@ export const MovePieces = () => {
   });
 
   const animate = () => {
-    if (animationIndex >= stripesRef.current.length) {
-      clearInterval(interval.current);
-      interval.current = null;
-      setTimeout(() => {
-        stripesRef.current.forEach((ref) => ref.current?.moveStripes2());
-      }, ANIMATION_DELAY + ANIMATION_DURATION);
+    if (lastAnimationTimeout.current) {
       return;
     }
-    stripesRef.current[animationIndex].current?.moveStripes();
-    animationIndex += 1;
+
+    if (animationIndexRef.current >= stripesRef.current.length) {
+      clearInterval(interval.current);
+      interval.current = null;
+
+      lastAnimationTimeout.current = setTimeout(() => {
+        stripesRef.current.forEach((ref) => ref.current?.moveStripes2());
+
+        setTimeout(() => {
+          onEnd();
+        }, ANIMATION_DELAY + ANIMATION_DURATION + 1000);
+      }, ANIMATION_DELAY + ANIMATION_DURATION);
+
+      return;
+    }
+    stripesRef.current[animationIndexRef.current].current?.moveStripes();
+    animationIndexRef.current += 1;
   };
 
   const transform = useDerivedValue(() => {

@@ -34,13 +34,16 @@ const ANIMATION_DELAY = 500;
 
 const STRIPE_Y_INTERVAL = 5;
 
-export const MoveStripes = () => {
+export type MoveStripesProps = {
+  onEnd?: () => void;
+};
+export const MoveStripes: React.FC<MoveStripesProps> = ({ onEnd }) => {
   const picture = useImage(photo);
 
   const stripesRef = useRef(stripes.map(() => createRef<Stripe>()));
-  var animationIndex = 0;
   const interval = useRef<NodeJS.Timeout>(null);
-  const rotate = useSharedValue(0);
+  const lastAnimationTimeout = useRef<NodeJS.Timeout>(null);
+  var animationIndexRef = useRef(0);
 
   useEffect(() => {
     setTimeout(() => {
@@ -56,23 +59,26 @@ export const MoveStripes = () => {
   });
 
   const animate = () => {
-    if (animationIndex >= stripesRef.current.length) {
+    if (lastAnimationTimeout.current) {
+      return;
+    }
+
+    if (animationIndexRef.current >= stripesRef.current.length) {
       clearInterval(interval.current);
       interval.current = null;
-      setTimeout(() => {
+
+      lastAnimationTimeout.current = setTimeout(() => {
         stripesRef.current.forEach((ref) => ref.current?.moveStripes2());
 
-        // setTimeout(() => {}, 1000);
+        setTimeout(() => {
+          onEnd();
+        }, ANIMATION_DELAY + ANIMATION_DURATION + 1000);
       }, ANIMATION_DELAY + ANIMATION_DURATION);
       return;
     }
-    stripesRef.current[animationIndex].current?.moveStripes();
-    animationIndex += 1;
+    stripesRef.current[animationIndexRef.current].current?.moveStripes();
+    animationIndexRef.current += 1;
   };
-
-  const transform = useDerivedValue(() => {
-    return [{ rotate: `${rotate.value}deg` }];
-  }, []);
 
   if (!picture) {
     return null;
