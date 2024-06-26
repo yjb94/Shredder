@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { MovePieces } from "./src/MovePieces";
-import { MoveStripes } from "./src/MoveStripes";
-import { ShredPieces } from "./src/ShredPieces";
-import { ShredStripes } from "./src/ShredStripes";
+import { ShredStripes } from "./ShredStripes";
+import { MoveStripes } from "./MoveStripes";
+import { ShredPieces } from "./ShredPieces";
+import { MovePieces } from "./MovePieces";
 
-export default function App() {
+const Main = () => {
   const [step, setStep] = useState(0);
 
   const toNextStep = () => {
@@ -27,4 +27,6 @@ export default function App() {
   if (step === 3) {
     return <MovePieces onEnd={toNextStep} />;
   }
-}
+};
+
+export { Main };

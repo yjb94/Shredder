@@ -22,7 +22,6 @@ import {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { createNoise2D } from "./SimpleNoise";
 import {
   NUMBER_OF_STRIPES,
   photo,
@@ -36,6 +35,8 @@ import { generateTrianglePointsAndIndices } from "./utils";
 import { Skeleton } from "./Skeleton";
 import ShredderBack from "./ShredderBack";
 import ShredderHead from "./ShredderHead";
+import { createNoise2D } from "./simplex-noise/simplex-noise";
+import { Platform } from "react-native";
 
 const START_Y = 30 as const;
 
@@ -45,11 +46,8 @@ export type ShredStripesProps = {
 
 export const ShredStripes: React.FC<ShredStripesProps> = ({ onEnd }) => {
   const picture = useImage(photo);
-
   const y = useSharedValue<number>(START_Y);
   const offset = useSharedValue(0);
-
-  const [isStripeCropped, setIsStripeCropped] = useState(false);
 
   const onTouch = useTouchHandler({
     onStart: (event) => {
@@ -62,7 +60,6 @@ export const ShredStripes: React.FC<ShredStripesProps> = ({ onEnd }) => {
       }
     },
     onEnd: () => {
-      setIsStripeCropped(true);
       y.value = withTiming(
         windowHeight + 200,
         {
@@ -74,7 +71,6 @@ export const ShredStripes: React.FC<ShredStripesProps> = ({ onEnd }) => {
       );
     },
   });
-
   const transform = useDerivedValue(() => {
     return [
       {
@@ -83,7 +79,6 @@ export const ShredStripes: React.FC<ShredStripesProps> = ({ onEnd }) => {
       { translateY: y.value },
     ];
   }, [y]);
-
   if (!picture) {
     return null;
   }
@@ -97,26 +92,15 @@ export const ShredStripes: React.FC<ShredStripesProps> = ({ onEnd }) => {
         onTouch={onTouch}
       >
         <ShredderBack />
-
         <Group clip={rect(0, shredderY, windowWidth, windowHeight)}>
           <Group transform={transform}>
             <ImageShader image={picture} rect={pictureRect} fit="fill" />
             {stripes.map((stripe, i) => {
-              return (
-                <Stripe
-                  key={i}
-                  stripe={stripe}
-                  i={i}
-                  y={y}
-                  isCroped={isStripeCropped}
-                />
-              );
+              return <Stripe key={i} stripe={stripe} i={i} y={y} />;
             })}
           </Group>
         </Group>
-
         <ShredderHead />
-
         <Group clip={rect(0, 0, windowWidth, shredderY)}>
           <Group transform={transform}>
             <Image image={picture} rect={pictureRect} />
@@ -131,7 +115,6 @@ type StripeProps = {
   stripe: SkRect;
   y: SharedValue<number>;
   i: number;
-  isCroped: boolean;
 };
 
 const Stripe: React.FC<StripeProps> = ({ stripe, y, i: stripeIndex }) => {
@@ -140,6 +123,7 @@ const Stripe: React.FC<StripeProps> = ({ stripe, y, i: stripeIndex }) => {
     NUMBER_OF_STRIPES
   );
 
+  console.log("Platform.OS", Platform.OS);
   const noise = createNoise2D();
 
   const animatedVertices = useDerivedValue(() => {

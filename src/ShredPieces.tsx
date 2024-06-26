@@ -20,7 +20,6 @@ import {
 } from "react-native-reanimated";
 import ShredderBack from "./ShredderBack";
 import ShredderHead from "./ShredderHead";
-import { createNoise2D } from "./SimpleNoise";
 import {
   NUMBER_OF_STRIPES,
   photo,
@@ -31,6 +30,7 @@ import {
   windowWidth,
 } from "./const";
 import { generateTrianglePointsAndIndices } from "./utils";
+import { createNoise2D } from "./simplex-noise/simplex-noise";
 
 const verticalStripes: SkRect[] = [];
 for (let i = 0; i < NUMBER_OF_STRIPES; i++) {
