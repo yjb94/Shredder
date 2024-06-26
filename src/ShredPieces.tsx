@@ -27,10 +27,11 @@ import {
   shredderY,
   stripes,
   windowHeight,
-  windowWidth,
+  canvasWidth,
 } from "./const";
 import { generateTrianglePointsAndIndices } from "./utils";
 import { createNoise2D } from "./simplex-noise/simplex-noise";
+import { Skeleton } from "./Skeleton";
 
 const verticalStripes: SkRect[] = [];
 for (let i = 0; i < NUMBER_OF_STRIPES; i++) {
@@ -109,7 +110,10 @@ export const ShredPieces: React.FC<ShredPiecesProps> = ({ onEnd }) => {
   const transform = useDerivedValue(() => {
     return [
       {
-        translateX: windowWidth / 2 - pictureRect.width / 2,
+        translateX: canvasWidth / 2 - pictureRect.width / 2,
+      },
+      {
+        translateY: 100,
       },
       {
         rotateZ: Math.PI / 2,
@@ -132,7 +136,7 @@ export const ShredPieces: React.FC<ShredPiecesProps> = ({ onEnd }) => {
       >
         <ShredderBack />
 
-        <Group clip={rect(0, shredderY, windowWidth, windowHeight)}>
+        <Group clip={rect(0, shredderY, canvasWidth, windowHeight)}>
           <Group
             transform={transform}
             origin={vec(pictureRect.width / 2, pictureRect.height / 2)}
@@ -153,7 +157,7 @@ export const ShredPieces: React.FC<ShredPiecesProps> = ({ onEnd }) => {
 
         <ShredderHead />
 
-        <Group clip={rect(0, 0, windowWidth, shredderY)}>
+        <Group clip={rect(0, 0, canvasWidth, shredderY)}>
           <Group
             transform={transform}
             origin={vec(pictureRect.width / 2, pictureRect.height / 2)}
@@ -272,24 +276,8 @@ const Stripe: React.FC<StripeProps> = ({ stripe, i: stripeIndex, y }) => {
       const delta =
         amplitude *
         noise(frequencyX * vertex.x, frequencyY * (vertex.y + y.value));
-      const nextVertex = vertices[vertexIndex + 2];
-      const nextDelta = nextVertex
-        ? amplitude *
-          noise(
-            frequencyX * nextVertex.x,
-            frequencyY * (nextVertex.y + y.value)
-          )
-        : 0;
 
-      if (vertexIndex % 4 === 0) {
-        return vec(vertex.x + delta, vertex.y + delta);
-      } else if (vertexIndex % 4 === 1) {
-        return vec(vertex.x + delta, vertex.y + delta);
-      } else if (vertexIndex % 4 === 2) {
-        return vec(vertex.x + nextDelta, vertex.y + nextDelta);
-      } else {
-        return vec(vertex.x + nextDelta, vertex.y + nextDelta);
-      }
+      return vec(vertex.x + delta, vertex.y + delta);
     });
   }, [vertices, y]);
 
@@ -300,7 +288,34 @@ const Stripe: React.FC<StripeProps> = ({ stripe, i: stripeIndex, y }) => {
         textures={pieceTexture}
         indices={indices}
       />
-      {/* <Skeleton vertices={animatedVertices} indices={indices} /> */}
+      {/* <Skeleton
+        vertices={animatedVertices}
+        indices={indices}
+        color={pallete[stripeIndex]}
+      /> */}
     </>
   );
 };
+
+const pallete = [
+  "#69D2E7",
+  "#A7DBD8",
+  "#E0E4CC",
+  "#F38630",
+  "#FA6900",
+  "#FE4365",
+  "#FC9D9A",
+  "#F9CDAD",
+  "#C8C8A9",
+  "#83AF9B",
+  "#ECD078",
+  "#D95B43",
+  "#C02942",
+  "#542437",
+  "#53777A",
+  "#556270",
+  "#4ECDC4",
+  "#C7F464",
+  "#FF6B6B",
+  "#C44D58",
+];

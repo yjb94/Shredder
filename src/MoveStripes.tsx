@@ -25,9 +25,10 @@ import {
   pictureRect,
   stripes,
   windowHeight,
-  windowWidth,
+  canvasWidth,
 } from "./const";
 import { generateTrianglePointsAndIndices } from "./utils";
+import { Skeleton } from "./Skeleton";
 
 const ANIMATION_DURATION = 1500;
 const ANIMATION_DELAY = 500;
@@ -90,7 +91,7 @@ export const MoveStripes: React.FC<MoveStripesProps> = ({ onEnd }) => {
         <Group
           transform={[
             {
-              translateX: windowWidth / 4,
+              translateX: canvasWidth / 4,
             },
           ]}
         >

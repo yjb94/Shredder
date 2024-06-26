@@ -6,6 +6,8 @@ export const NUMBER_OF_STRIPES = 20;
 export const pictureRatio = 1792 / 2304;
 export const { width: windowWidth, height: windowHeight } =
   Dimensions.get("window");
+export const canvasWidth = Math.min(windowWidth, 720);
+export const canvasHeight = Math.min(windowHeight, 1080);
 
 export const photo = require("./assets/skyscraper.jpg");
 // export const photo = require("./assets/grid.png");
@@ -13,8 +15,8 @@ export const photo = require("./assets/skyscraper.jpg");
 export const pictureRect = rect(
   0,
   0,
-  windowWidth / 2,
-  windowWidth / 2 / pictureRatio
+  canvasWidth / 2,
+  canvasWidth / 2 / pictureRatio
 );
 
 export const STRIPE_INTERVAL = 0;

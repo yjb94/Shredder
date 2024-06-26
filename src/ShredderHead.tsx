@@ -7,14 +7,14 @@ import {
   vec,
 } from "@shopify/react-native-skia";
 import React from "react";
-import { SHREDDER_KNIFE_POSITION, shredderY, windowWidth } from "./const";
+import { SHREDDER_KNIFE_POSITION, shredderY, canvasWidth } from "./const";
 
 const ShredderHead = () => {
   return (
     <Group>
       <Box
         box={rrect(
-          rect(5, shredderY, windowWidth - 10, SHREDDER_KNIFE_POSITION),
+          rect(5, shredderY, canvasWidth - 10, SHREDDER_KNIFE_POSITION),
           12,
           12
         )}

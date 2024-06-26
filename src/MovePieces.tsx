@@ -27,8 +27,9 @@ import {
   photo,
   pictureRect,
   windowHeight,
-  windowWidth,
+  canvasWidth,
 } from "./const";
+import { Skeleton } from "./Skeleton";
 
 const ANIMATION_DURATION = 1500;
 const ANIMATION_DELAY = 500;
@@ -126,7 +127,7 @@ export const MovePieces: React.FC<MovePiecesProps> = ({ onEnd }) => {
   const transform = useDerivedValue(() => {
     return [
       {
-        translateX: windowWidth / 2 - pictureRect.width / 2,
+        translateX: canvasWidth / 2 - pictureRect.width / 2,
       },
     ];
   }, [y]);

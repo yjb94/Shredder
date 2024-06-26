@@ -1,4 +1,4 @@
-import type { Vector } from "@shopify/react-native-skia";
+import type { AnimatedProp, Color, Vector } from "@shopify/react-native-skia";
 import { Skia, Path } from "@shopify/react-native-skia";
 import React from "react";
 import { SharedValue, useDerivedValue } from "react-native-reanimated";
@@ -6,9 +6,10 @@ import { SharedValue, useDerivedValue } from "react-native-reanimated";
 interface SkeletonProps {
   vertices: SharedValue<Vector[]>;
   indices: number[];
+  color?: AnimatedProp<Color>;
 }
 
-export const Skeleton = ({ vertices, indices }: SkeletonProps) => {
+export const Skeleton = ({ vertices, indices, color }: SkeletonProps) => {
   const path = useDerivedValue(() => {
     return indices.reduce((p, i, j) => {
       const vertex = vertices.value ? vertices.value[i] : vertices[i];
@@ -23,5 +24,7 @@ export const Skeleton = ({ vertices, indices }: SkeletonProps) => {
       return p;
     }, Skia.Path.Make());
   }, []);
-  return <Path path={path} style="stroke" strokeWidth={1} color="black" />;
+  return (
+    <Path path={path} style="stroke" strokeWidth={1} color={color || "black"} />
+  );
 };

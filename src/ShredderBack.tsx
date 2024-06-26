@@ -5,7 +5,7 @@ import {
   SHREDDER_HEIGHT,
   SHREDDER_KNIFE_POSITION,
   shredderY,
-  windowWidth,
+  canvasWidth,
 } from "./const";
 
 const ShredderBack = () => {
@@ -13,7 +13,7 @@ const ShredderBack = () => {
     <Group>
       <Box
         box={rrect(
-          rect(5, shredderY, windowWidth - 10, SHREDDER_HEIGHT),
+          rect(5, shredderY, canvasWidth - 10, SHREDDER_HEIGHT),
           12,
           12
         )}
@@ -23,7 +23,7 @@ const ShredderBack = () => {
         rect={rect(
           25,
           shredderY + SHREDDER_KNIFE_POSITION,
-          windowWidth - 50,
+          canvasWidth - 50,
           5
         )}
         color="rgb(47,52,59)"

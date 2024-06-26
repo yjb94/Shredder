@@ -29,7 +29,7 @@ import {
   shredderY,
   stripes,
   windowHeight,
-  windowWidth,
+  canvasWidth,
 } from "./const";
 import { generateTrianglePointsAndIndices } from "./utils";
 import { Skeleton } from "./Skeleton";
@@ -55,9 +55,9 @@ export const ShredStripes: React.FC<ShredStripesProps> = ({ onEnd }) => {
     },
     onActive: (event) => {
       const newY = offset.value + event.y;
-      if (newY > y.value && newY < windowHeight - pictureRect.height) {
-        y.value = newY;
-      }
+      // if (newY > y.value && newY < windowHeight - pictureRect.height) {
+      y.value = newY;
+      // }
     },
     onEnd: () => {
       y.value = withTiming(
@@ -74,7 +74,7 @@ export const ShredStripes: React.FC<ShredStripesProps> = ({ onEnd }) => {
   const transform = useDerivedValue(() => {
     return [
       {
-        translateX: windowWidth / 4,
+        translateX: canvasWidth / 4,
       },
       { translateY: y.value },
     ];
@@ -92,7 +92,7 @@ export const ShredStripes: React.FC<ShredStripesProps> = ({ onEnd }) => {
         onTouch={onTouch}
       >
         <ShredderBack />
-        <Group clip={rect(0, shredderY, windowWidth, windowHeight)}>
+        <Group clip={rect(0, shredderY, canvasWidth, windowHeight)}>
           <Group transform={transform}>
             <ImageShader image={picture} rect={pictureRect} fit="fill" />
             {stripes.map((stripe, i) => {
@@ -101,7 +101,7 @@ export const ShredStripes: React.FC<ShredStripesProps> = ({ onEnd }) => {
           </Group>
         </Group>
         <ShredderHead />
-        <Group clip={rect(0, 0, windowWidth, shredderY)}>
+        <Group clip={rect(0, 0, canvasWidth, shredderY)}>
           <Group transform={transform}>
             <Image image={picture} rect={pictureRect} />
           </Group>
@@ -123,7 +123,6 @@ const Stripe: React.FC<StripeProps> = ({ stripe, y, i: stripeIndex }) => {
     NUMBER_OF_STRIPES
   );
 
-  console.log("Platform.OS", Platform.OS);
   const noise = createNoise2D();
 
   const animatedVertices = useDerivedValue(() => {
