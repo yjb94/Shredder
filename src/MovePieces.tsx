@@ -1,17 +1,12 @@
 import {
   Canvas,
   Group,
-  Image,
   ImageShader,
-  Rect,
-  SkPoint,
   SkRect,
   Vector,
   Vertices,
-  interpolate,
   rect,
   useImage,
-  useTouchHandler,
   vec,
 } from "@shopify/react-native-skia";
 import React, {
@@ -20,9 +15,7 @@ import React, {
   useImperativeHandle,
   useMemo,
   useRef,
-  useState,
 } from "react";
-import { Dimensions, SafeAreaView } from "react-native";
 import {
   SharedValue,
   useDerivedValue,
@@ -30,23 +23,19 @@ import {
   withTiming,
 } from "react-native-reanimated";
 import {
-  generateTrianglePointsAndIndices,
-  generateTrianglePointsAndIndicesVertical,
-} from "./utils";
-import { Skeleton } from "./Skeleton";
-import { NUMBER_OF_STRIPES, photo } from "./const";
+  NUMBER_OF_STRIPES,
+  photo,
+  pictureRect,
+  windowHeight,
+  windowWidth,
+} from "./const";
 
 const ANIMATION_DURATION = 1500;
 const ANIMATION_DELAY = 500;
 
-const pictureRatio = 564 / 1030;
-const { width: windowWidth, height: windowHeight } = Dimensions.get("window");
-
-const pictureRect = rect(0, 0, windowWidth / 2, windowWidth / 2 / pictureRatio);
-
-const stripes: SkRect[] = [];
+const verticalStripes: SkRect[] = [];
 for (let i = 0; i < NUMBER_OF_STRIPES; i++) {
-  stripes.push(
+  verticalStripes.push(
     rect(
       0,
       (i * pictureRect.height) / NUMBER_OF_STRIPES,
@@ -90,7 +79,7 @@ export const MovePieces = () => {
 
   const y = useSharedValue(0);
 
-  const stripesRef = useRef(stripes.map(() => createRef<Stripe>()));
+  const stripesRef = useRef(verticalStripes.map(() => createRef<Stripe>()));
   var animationIndex = 0;
   const interval = useRef<NodeJS.Timeout>(null);
 
@@ -144,7 +133,7 @@ export const MovePieces = () => {
           origin={vec(pictureRect.width / 2, pictureRect.height / 2)}
         >
           <ImageShader image={picture} rect={pictureRect} fit="fill" />
-          {stripes.map((stripe, stripeIndex) => {
+          {verticalStripes.map((stripe, stripeIndex) => {
             return (
               <Stripe
                 key={stripeIndex}

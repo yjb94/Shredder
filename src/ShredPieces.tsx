@@ -1,36 +1,25 @@
 import {
   Canvas,
   Group,
-  Image,
   ImageShader,
-  Rect,
-  SkPoint,
   SkRect,
   Vector,
   Vertices,
-  interpolate,
   rect,
   useImage,
   useTouchHandler,
   vec,
 } from "@shopify/react-native-skia";
-import React, {
-  createRef,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { Dimensions, SafeAreaView } from "react-native";
+import React from "react";
 import {
   SharedValue,
   useDerivedValue,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { generateTrianglePointsAndIndices } from "./utils";
-import { Skeleton } from "./Skeleton";
+import ShredderBack from "./ShredderBack";
+import ShredderHead from "./ShredderHead";
+import { createNoise2D } from "./SimpleNoise";
 import {
   NUMBER_OF_STRIPES,
   photo,
@@ -40,9 +29,7 @@ import {
   windowHeight,
   windowWidth,
 } from "./const";
-import { createNoise2D } from "./SimpleNoise";
-import ShredderHead from "./ShredderHead";
-import ShredderBack from "./ShredderBack";
+import { generateTrianglePointsAndIndices } from "./utils";
 
 const verticalStripes: SkRect[] = [];
 for (let i = 0; i < NUMBER_OF_STRIPES; i++) {
