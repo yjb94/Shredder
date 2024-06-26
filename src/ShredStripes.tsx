@@ -48,18 +48,24 @@ export const ShredStripes: React.FC<ShredStripesProps> = ({ onEnd }) => {
   const picture = useImage(photo);
   const y = useSharedValue<number>(START_Y);
   const offset = useSharedValue(0);
+  const isTouched = useSharedValue(false);
 
   const onTouch = useTouchHandler({
     onStart: (event) => {
+      isTouched.value = true;
       offset.value = y.value - event.y;
     },
     onActive: (event) => {
+      if (isTouched.value === false) {
+        return;
+      }
       const newY = offset.value + event.y;
-      // if (newY > y.value && newY < windowHeight - pictureRect.height) {
-      y.value = newY;
-      // }
+      if (newY > y.value && newY < windowHeight - pictureRect.height) {
+        y.value = newY;
+      }
     },
     onEnd: () => {
+      isTouched.value = false;
       y.value = withTiming(
         windowHeight + 200,
         {

@@ -83,18 +83,24 @@ export const ShredPieces: React.FC<ShredPiecesProps> = ({ onEnd }) => {
 
   const y = useSharedValue(0);
   const offset = useSharedValue(0);
+  const isTouched = useSharedValue(false);
 
   const onTouch = useTouchHandler({
     onStart: (event) => {
+      isTouched.value = true;
       offset.value = y.value - event.y;
     },
     onActive: (event) => {
+      if (isTouched.value === false) {
+        return;
+      }
       const newY = offset.value + event.y;
       if (newY > y.value && newY < windowHeight - pictureRect.height) {
         y.value = newY;
       }
     },
     onEnd: () => {
+      isTouched.value = false;
       y.value = withTiming(
         windowHeight + 200,
         {
