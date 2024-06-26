@@ -1,16 +1,11 @@
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
-import { Puzzle } from "./src/Puzzle";
+import { MovePieces } from "./src/MovePieces";
+import { MoveStripes } from "./src/MoveStripes";
+import { ShredPieces } from "./src/ShredPieces";
+import { ShredStripes } from "./src/ShredStripes";
 
 export default function App() {
-  return <Puzzle />;
+  return <ShredStripes />;
+  return <MoveStripes />;
+  return <ShredPieces />;
+  return <MovePieces />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
