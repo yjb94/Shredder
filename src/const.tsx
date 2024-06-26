@@ -8,6 +8,7 @@ export const { width: windowWidth, height: windowHeight } =
   Dimensions.get("window");
 
 export const photo = require("./assets/skyscraper.jpg");
+// export const photo = require("./assets/grid.png");
 
 export const pictureRect = rect(
   0,
@@ -29,3 +30,7 @@ for (let i = 0; i < NUMBER_OF_STRIPES; i++) {
     )
   );
 }
+
+export const SHREDDER_HEIGHT = 100;
+export const SHREDDER_KNIFE_POSITION = SHREDDER_HEIGHT - 30;
+export const shredderY = windowHeight / 2 - SHREDDER_HEIGHT / 2;

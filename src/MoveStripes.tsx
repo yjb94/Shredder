@@ -4,7 +4,6 @@ import {
   ImageShader,
   SkRect,
   Vertices,
-  rect,
   useImage,
   vec,
 } from "@shopify/react-native-skia";
@@ -14,14 +13,12 @@ import React, {
   useImperativeHandle,
   useRef,
 } from "react";
-import { Dimensions, SafeAreaView } from "react-native";
+import { SafeAreaView } from "react-native";
 import {
   useDerivedValue,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { generateTrianglePointsAndIndices } from "./utils";
-import { Skeleton } from "./Skeleton";
 import {
   NUMBER_OF_STRIPES,
   photo,
@@ -30,11 +27,10 @@ import {
   windowHeight,
   windowWidth,
 } from "./const";
+import { generateTrianglePointsAndIndices } from "./utils";
 
 const ANIMATION_DURATION = 1500;
 const ANIMATION_DELAY = 500;
-// const ANIMATION_DURATION = 100;
-// const ANIMATION_DELAY = 100;
 
 const STRIPE_Y_INTERVAL = 5;
 
@@ -44,6 +40,7 @@ export const MoveStripes = () => {
   const stripesRef = useRef(stripes.map(() => createRef<Stripe>()));
   var animationIndex = 0;
   const interval = useRef<NodeJS.Timeout>(null);
+  const rotate = useSharedValue(0);
 
   useEffect(() => {
     setTimeout(() => {
@@ -64,6 +61,8 @@ export const MoveStripes = () => {
       interval.current = null;
       setTimeout(() => {
         stripesRef.current.forEach((ref) => ref.current?.moveStripes2());
+
+        // setTimeout(() => {}, 1000);
       }, ANIMATION_DELAY + ANIMATION_DURATION);
       return;
     }
@@ -71,17 +70,17 @@ export const MoveStripes = () => {
     animationIndex += 1;
   };
 
+  const transform = useDerivedValue(() => {
+    return [{ rotate: `${rotate.value}deg` }];
+  }, []);
+
   if (!picture) {
     return null;
   }
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <Canvas
-        style={{
-          flex: 1,
-        }}
-      >
+      <Canvas style={{ flex: 1 }}>
         <Group
           transform={[
             {

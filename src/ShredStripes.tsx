@@ -26,17 +26,17 @@ import {
   NUMBER_OF_STRIPES,
   photo,
   pictureRect,
+  shredderY,
   stripes,
   windowHeight,
   windowWidth,
 } from "./const";
 import { generateTrianglePointsAndIndices } from "./utils";
+import { Skeleton } from "./Skeleton";
+import ShredderBack from "./ShredderBack";
+import ShredderHead from "./ShredderHead";
 
 const START_Y = 30 as const;
-
-const SHREDDER_HEIGHT = 100;
-const SHREDDER_KNIFE_POSITION = SHREDDER_HEIGHT - 30;
-const shredderY = windowHeight / 2 - SHREDDER_HEIGHT / 2;
 
 export const ShredStripes = () => {
   const picture = useImage(photo);
@@ -73,14 +73,6 @@ export const ShredStripes = () => {
     ];
   }, [y]);
 
-  const topRect = useDerivedValue(() => {
-    return rect(0, 0, windowWidth, y.value);
-  }, [y]);
-
-  const bottomRect = useDerivedValue(() => {
-    return rect(0, y.value, windowWidth, shredderY);
-  }, [y]);
-
   if (!picture) {
     return null;
   }
@@ -93,25 +85,7 @@ export const ShredStripes = () => {
         }}
         onTouch={onTouch}
       >
-        <Group>
-          <Box
-            box={rrect(
-              rect(5, shredderY, windowWidth - 10, SHREDDER_HEIGHT),
-              12,
-              12
-            )}
-            color="rgb(66,72,73)"
-          />
-          <Rect
-            rect={rect(
-              25,
-              shredderY + SHREDDER_KNIFE_POSITION,
-              windowWidth - 50,
-              5
-            )}
-            color="rgb(47,52,59)"
-          />
-        </Group>
+        <ShredderBack />
 
         <Group clip={rect(0, shredderY, windowWidth, windowHeight)}>
           <Group transform={transform}>
@@ -129,22 +103,8 @@ export const ShredStripes = () => {
             })}
           </Group>
         </Group>
-        <Group>
-          <Box
-            box={rrect(
-              rect(5, shredderY, windowWidth - 10, SHREDDER_KNIFE_POSITION),
-              12,
-              12
-            )}
-            color="rgb(66,72,73)"
-          />
-          <Circle c={vec(33, shredderY + 25)} r={8} color="white" />
-          <Circle
-            c={vec(61, shredderY + 25)}
-            r={8}
-            color="rgb(248, 230, 167)"
-          />
-        </Group>
+
+        <ShredderHead />
 
         <Group clip={rect(0, 0, windowWidth, shredderY)}>
           <Group transform={transform}>
